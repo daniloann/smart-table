@@ -1,18 +1,13 @@
-import {data as sourceData} from "./data/dataset_1.js";
-
 import {initData} from "./data.js";
 import {processFormData} from "./lib/utils.js";
-
 import {initTable} from "./components/table.js";
-// @todo: подключение
 import {initSorting} from "./components/sorting.js"; 
 import {initPagination} from "./components/pagination.js";
 import {initFiltering} from "./components/filtering.js";
 import {initSearching} from "./components/searching.js";
 
-
 // Исходные данные используемые в render()
-const api = initData(sourceData);
+const api = initData();
 
 /**
  * Сбор и обработка полей из таблицы
@@ -37,7 +32,7 @@ function collectState() {
 async function render(action) {
     let state = collectState(); 
     let query = {};
-    // @todo: использование
+    
     query = applySearching(query, state, action);
     query = applyFiltering(query, state, action);
     query = applySorting(query, state, action);
@@ -51,7 +46,7 @@ async function render(action) {
 const sampleTable = initTable({
     tableTemplate: 'table',
     rowTemplate: 'row',
-    before: ['search','header', 'filter'],
+    before: ['search', 'header', 'filter'],
     after: ['pagination']
 }, render);
 

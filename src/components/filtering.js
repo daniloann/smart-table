@@ -1,47 +1,75 @@
-export function initFiltering(elements) {
-    const updateIndexes = (elements, indexes) => {
-        Object.keys(indexes).forEach((elementName) => {
-            elements[elementName].append(...Object.values(indexes[elementName]).map(name => {
-                const el = document.createElement('option');
-                el.textContent = name;
-                el.value = name;
-                return el;
-            }))
-        })
-    }
-
+export function initFiltering(filterElements) {
     const applyFiltering = (query, state, action) => {
-        // код с обработкой очистки поля
+        // Обработка очистки фильтра при клике на иконку
         if (action && action.name === 'clear') {
             const field = action.dataset.field;
-            const parent = action.closest('.filter-field');
-            const input = parent.querySelector('input, select');
+            const input = action.closest('.filter-wrapper')?.querySelector('input');
             
             if (input) {
-                input.value = '';
+                input.value = ''; // Очищаем поле ввода
+                // Обновляем state через событие change
+                input.dispatchEvent(new Event('change', { bubbles: true }));
             }
             
-            // Также сбросить состояние
-            if (state[field] !== undefined) {
-                state[field] = '';
-            }
+            // Не добавляем фильтр для этого поля в query
+            return query;
         }
 
-        // @todo: #4.5 — отфильтровать данные, используя компаратор
-        const filter = {};
-        Object.keys(elements).forEach(key => {
-            if (elements[key]) {
-                if (['INPUT', 'SELECT'].includes(elements[key].tagName) && elements[key].value) { // ищем поля ввода в фильтре с непустыми данными
-                    filter[`filter[${elements[key].name}]`] = elements[key].value; // чтобы сформировать в query вложенный объект фильтра
-                }
-            }
-        })
+        // Применяем фильтры из state
+        const newQuery = { ...query };
+        
+        if (state.date?.trim()) {
+            newQuery.date = state.date;
+        }
+        
+        if (state.customer?.trim()) {
+            newQuery.customer = state.customer;
+        }
+        
+        if (state.seller && state.seller !== '') {
+            newQuery.seller = state.seller;
+        }
+        
+        if (state.totalFrom?.trim()) {
+            newQuery.totalFrom = state.totalFrom;
+        }
+        
+        if (state.totalTo?.trim()) {
+            newQuery.totalTo = state.totalTo;
+        }
+        
+        return newQuery;
+    };
 
-        return Object.keys(filter).length ? Object.assign({}, query, filter) : query; // если в фильтре что-то добавилось, применим к запросу
-    }
+    const updateIndexes = (elements, indexes) => {
+        // Обновляем селект с продавцами
+        const sellerSelect = elements.searchBySeller;
+        if (sellerSelect) {
+            // Сохраняем выбранное значение
+            const currentValue = sellerSelect.value;
+            
+            // Очищаем текущие опции кроме первой
+            while (sellerSelect.options.length > 1) {
+                sellerSelect.remove(1);
+            }
+            
+            // Добавляем новые опции
+            Object.entries(indexes.searchBySeller).forEach(([id, name]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = name;
+                sellerSelect.appendChild(option);
+            });
+            
+            // Восстанавливаем выбранное значение
+            if (currentValue) {
+                sellerSelect.value = currentValue;
+            }
+        }
+    };
 
     return {
-        updateIndexes,
-        applyFiltering
-    }
+        applyFiltering,
+        updateIndexes
+    };
 }
